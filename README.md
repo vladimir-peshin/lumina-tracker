@@ -17,7 +17,7 @@ A self-hosted game collection tracker with a premium dark UI. Manage your librar
 - **Hidden Games** — Hide games from the main view without deleting them
 - **Duplicate Detection** — Warns when adding a game that already exists
 - **Steam Import** — Bulk import your Steam library with developer and year data
-- **GOG Import** — Bulk import your GOG library with deduplication
+- **GOG Import** — Bulk import your GOG library
 - **Infinite Scroll** — Handles 1000+ games smoothly with lazy loading
 - **Responsive** — Works on desktop and mobile
 - **Self-Hosted** — All data stored locally in a JSON file, no cloud dependency
@@ -54,7 +54,7 @@ npm install -g pnpm
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/lumina-tracker.git
+git clone https://github.com/vladimir-peshin/lumina-tracker.git
 cd lumina-tracker
 
 # Install dependencies
@@ -176,7 +176,6 @@ node scripts/import_gog.cjs
 
 - Requires your GOG profile to be public
 - Adds `GOG` platform tag to duplicates
-- Fetches developer and year from the GOG API
 
 ## 📁 Project Structure
 
