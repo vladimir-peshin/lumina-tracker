@@ -24,7 +24,7 @@ A self-hosted game collection tracker with a premium dark UI. Manage your librar
 
 ## 📸 Screenshots
 
-*Add your screenshots here*
+*TODO*
 
 ## 🛠 Tech Stack
 
