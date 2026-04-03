@@ -560,6 +560,15 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                     required
                     placeholder="e.g. Cyberpunk 2077"
                     autoComplete="off"
+                    autoFocus={!isExistingGame}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' && e.target.selectionStart === 0) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onBlur={(e) => {
+                      setFormData(prev => ({ ...prev, title: e.target.value.trim() }));
+                    }}
                   />
                 </div>
 
@@ -572,6 +581,14 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                       onChange={handleChange}
                       placeholder="e.g. CD Projekt Red"
                       autoComplete="off"
+                      onKeyDown={(e) => {
+                        if (e.key === ' ' && e.target.selectionStart === 0) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onBlur={(e) => {
+                        setFormData(prev => ({ ...prev, developer: e.target.value.trim() }));
+                      }}
                     />
                   </div>
                   <div className="form-group">
@@ -775,17 +792,18 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
 
   return (
     <div className="autocomplete-wrapper" ref={wrapperRef} onBlur={(e) => { if (!wrapperRef.current?.contains(e.relatedTarget)) { setIsOpen(false); setHighlightIndex(-1); } }}>
-      <div className="multi-input-container" onClick={() => wrapperRef.current?.querySelector('input')?.focus()}>
+      <div className="multi-input-container" onClick={() => { wrapperRef.current?.querySelector('input')?.focus(); setIsOpen(true); }}>
         {selectedValues.map((val, i) => (
-          <span key={i} className="multi-tag">
+          <span key={i} className="multi-tag" onClick={(e) => e.stopPropagation()}>
             {val}
-            <span className="multi-tag-remove" onClick={(e) => handleRemove(i, e)}>×</span>
+            <span className="multi-tag-remove" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleRemove(i, e); }}>×</span>
           </span>
         ))}
         <input
           value={inputText}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
+          onClick={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={selectedValues.length === 0 ? placeholder : ''}
           autoComplete="off"
@@ -809,7 +827,7 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
             <div
               key={opt}
               className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}`}
-              onClick={() => handleSelect(opt)}
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(opt); }}
             >
               {opt}
             </div>
@@ -892,7 +910,7 @@ function SingleSelectDropdown({ name, value, onChange, options, placeholder }) {
             <div
               key={opt}
               className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}${opt === value ? ' is-selected' : ''}`}
-              onClick={() => handleSelect(opt)}
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(opt); }}
             >
               {opt}
             </div>
@@ -979,7 +997,7 @@ function FilterDropdown({ value, onChange, options, allLabel }) {
             <div
               key={opt || '__all__'}
               className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}${opt === value ? ' is-selected' : ''}`}
-              onClick={() => handleSelect(opt)}
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(opt); }}
             >
               {opt || allLabel}
             </div>
