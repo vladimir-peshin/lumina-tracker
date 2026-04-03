@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Filter, X, Plus, Image as ImageIcon, Trash2, Upload, Check, Globe, Eye, EyeOff } from 'lucide-react';
+import { Search, Filter, X, Plus, Image as ImageIcon, Trash2, Upload, Check, Globe, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from './cropUtils';
 
@@ -31,7 +31,7 @@ export default function App() {
   const [collectionFilter, setCollectionFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showHidden, setShowHidden] = useState(false);
-  
+
   const [selectedGame, setSelectedGame] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -64,20 +64,20 @@ export default function App() {
   const filteredGames = useMemo(() => {
     const filtered = games.filter(game => {
       const searchLower = search.toLowerCase();
-      const matchSearch = !search || 
-        (game.title || '').toLowerCase().includes(searchLower) || 
+      const matchSearch = !search ||
+        (game.title || '').toLowerCase().includes(searchLower) ||
         (game.developer || '').toLowerCase().includes(searchLower);
-      
-      const matchPlatform = platformFilter 
-        ? (game.platform || '').split(',').map(p => p.trim().toLowerCase()).includes(platformFilter.toLowerCase()) 
+
+      const matchPlatform = platformFilter
+        ? (game.platform || '').split(',').map(p => p.trim().toLowerCase()).includes(platformFilter.toLowerCase())
         : true;
-      
+
       const gameTagsArray = (game.tags || '').split(',').map(t => t.trim().toLowerCase());
       const matchTag = tagFilter ? gameTagsArray.includes(tagFilter.toLowerCase()) : true;
 
       const gameCollsArray = (game.collections || '').split(',').map(c => c.trim().toLowerCase());
       const matchCollection = collectionFilter ? gameCollsArray.includes(collectionFilter.toLowerCase()) : true;
-      
+
       const matchStatus = statusFilter ? (game.status || '').toLowerCase() === statusFilter.toLowerCase() : true;
 
       // Visibility logic: show if (!hidden AND matches filter) OR (showHidden AND matches filter) OR (search matches hidden game)
@@ -86,11 +86,18 @@ export default function App() {
 
       return matchSearch && matchPlatform && matchTag && matchCollection && matchStatus && shouldShowByVisibility;
     });
-    
-    // Sort alphabetically by title
+
+    // Sort: prioritize titles starting with search text, then alphabetically
     return filtered.sort((a, b) => {
-      const titleA = a.title || '';
-      const titleB = b.title || '';
+      const titleA = (a.title || '').toLowerCase();
+      const titleB = (b.title || '').toLowerCase();
+      if (search) {
+        const searchLower = search.toLowerCase();
+        const aStarts = titleA.startsWith(searchLower);
+        const bStarts = titleB.startsWith(searchLower);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+      }
       return titleA.localeCompare(titleB);
     });
   }, [games, search, platformFilter, tagFilter, collectionFilter, statusFilter, showHidden]);
@@ -98,16 +105,16 @@ export default function App() {
   useEffect(() => {
     if (sentinelRef.current) {
       if (observerRef.current) observerRef.current.disconnect();
-      
+
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           setVisibleCount(prev => prev + 100);
         }
       }, { rootMargin: '400px' });
-      
+
       observerRef.current.observe(sentinelRef.current);
     }
-    
+
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
@@ -117,7 +124,7 @@ export default function App() {
     setSelectedGame({
       title: '',
       developer: '',
-      year: new Date().getFullYear(),
+      year: '',
       platform: '',
       tags: '',
       collections: '',
@@ -138,8 +145,8 @@ export default function App() {
     const isNew = !games.find(g => g.id === updatedGame.id);
 
     // Duplicate title validation
-    const duplicate = games.find(g => 
-      g.title.toLowerCase().trim() === (updatedGame.title || '').toLowerCase().trim() && 
+    const duplicate = games.find(g =>
+      g.title.toLowerCase().trim() === (updatedGame.title || '').toLowerCase().trim() &&
       g.id !== updatedGame.id
     );
 
@@ -147,7 +154,7 @@ export default function App() {
       alert(`A game with the title "${updatedGame.title}" already exists in your collection.`);
       return;
     }
-    
+
     try {
       if (isNew) {
         const res = await fetch(API_URL, {
@@ -189,7 +196,7 @@ export default function App() {
   const closeModal = useCallback(() => setIsModalOpen(false), []);
 
   if (loading) {
-    return <div style={{textAlign: 'center', padding: '4rem'}}>Loading your collection...</div>;
+    return <div style={{ textAlign: 'center', padding: '4rem' }}>Loading your collection...</div>;
   }
 
   return (
@@ -204,79 +211,32 @@ export default function App() {
       <div className="controls">
         <div className="search-input-wrapper" style={{ flex: '1 1 300px' }}>
           <Search className="search-icon" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by title or developer..." 
+          <input
+            type="text"
+            placeholder="Search by title or developer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <div className="select-wrapper">
-          <select 
-            value={platformFilter} 
-            onChange={(e) => setPlatformFilter(e.target.value)}
-          >
-            <option value="">All Platforms</option>
-            {platforms.map(p => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-          <Filter className="select-icon" size={16} />
-        </div>
+        <FilterDropdown value={platformFilter} onChange={setPlatformFilter} options={platforms} allLabel="All Platforms" />
+        <FilterDropdown value={tagFilter} onChange={setTagFilter} options={tags} allLabel="All Tags" />
+        <FilterDropdown value={collectionFilter} onChange={setCollectionFilter} options={collections} allLabel="All Collections" />
+        <FilterDropdown value={statusFilter} onChange={setStatusFilter} options={STATUSES} allLabel="All Statuses" />
 
-        <div className="select-wrapper">
-          <select 
-            value={tagFilter} 
-            onChange={(e) => setTagFilter(e.target.value)}
-          >
-            <option value="">All Tags</option>
-            {tags.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          <Filter className="select-icon" size={16} />
-        </div>
-
-        <div className="select-wrapper">
-          <select 
-            value={collectionFilter} 
-            onChange={(e) => setCollectionFilter(e.target.value)}
-          >
-            <option value="">All Collections</option>
-            {collections.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <Filter className="select-icon" size={16} />
-        </div>
-
-        <div className="select-wrapper">
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            {STATUSES.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <Filter className="select-icon" size={16} />
-        </div>
-
-        <button 
+        <button
           className={`btn ${showHidden ? 'btn-primary' : 'btn-secondary'} btn-icon`}
           onClick={() => setShowHidden(!showHidden)}
           title={showHidden ? "Hide hidden games" : "Show hidden games"}
         >
-          {showHidden ? <Eye size={18} /> : <EyeOff size={18} /> }
+          {showHidden ? <Eye size={18} /> : <EyeOff size={18} />}
         </button>
       </div>
 
       <div className="game-grid">
         {filteredGames.slice(0, visibleCount).map(game => (
-          <div 
-            key={game.id} 
+          <div
+            key={game.id}
             className={`game-card ${game.hidden ? 'is-hidden' : ''}`}
             onClick={() => handleEditClick(game)}
             data-tooltip={game.title || 'Untitled'}
@@ -285,7 +245,7 @@ export default function App() {
               {game.cover ? (
                 <img src={game.cover} alt={game.title} className="cover-image" loading="lazy" />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)'}}>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)' }}>
                   <ImageIcon size={48} color="rgba(255,255,255,0.2)" />
                 </div>
               )}
@@ -301,17 +261,17 @@ export default function App() {
         )}
 
         {filteredGames.length === 0 && (
-          <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)'}}>
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
             No games found matching your filters.
           </div>
         )}
       </div>
 
       {isModalOpen && selectedGame && createPortal(
-        <GameModal 
-          game={selectedGame} 
-          onClose={closeModal} 
-          onSave={handleSaveGame} 
+        <GameModal
+          game={selectedGame}
+          onClose={closeModal}
+          onSave={handleSaveGame}
           onDelete={handleDeleteGame}
           platforms={platforms}
           tags={tags}
@@ -361,7 +321,7 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
     img.crossOrigin = 'anonymous';
     img.onload = async () => {
       const ratio = img.width / img.height;
-      if (Math.abs(ratio - (2/3)) < 0.05) {
+      if (Math.abs(ratio - (2 / 3)) < 0.05) {
         // Skip Cropper, it's already a portrait poster
         try {
           const fullImageBase64 = await getCroppedImg(imageUrl, { x: 0, y: 0, width: img.width, height: img.height });
@@ -458,12 +418,12 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div 
-        className="modal-content" 
-        onClick={e => e.stopPropagation()} 
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
         style={cropMode ? { maxWidth: '800px', height: '80vh', display: 'flex', flexDirection: 'column' } : {}}
       >
-        <button className="modal-close" onClick={onClose} title="Close" type="button" style={{zIndex: 100}}>
+        <button className="modal-close" onClick={onClose} title="Close" type="button" style={{ zIndex: 100 }}>
           <X size={20} />
         </button>
 
@@ -481,14 +441,14 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
               />
             </div>
             <div className="cropper-controls">
-              <input 
-                type="range" 
-                value={zoom} 
-                min={1} 
-                max={3} 
-                step={0.1} 
-                aria-label="Zoom" 
-                onChange={(e) => setZoom(e.target.value)} 
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-label="Zoom"
+                onChange={(e) => setZoom(e.target.value)}
                 style={{ width: '200px' }}
               />
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -518,20 +478,20 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                       <span>Upload Local Image</span>
                     </div>
                   )}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    ref={fileInputRef} 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
                     onChange={handleImageUpload}
                     title="Upload cover image"
                   />
                 </div>
               )}
 
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
+              <button
+                type="button"
+                className="btn btn-secondary"
                 style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem', padding: '0.5rem 1rem', alignSelf: 'center' }}
                 onClick={handleToggleSearch}
               >
@@ -542,9 +502,9 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                 <div className="steamgrid-search-container">
                   <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--text-main)', opacity: 0.9 }}>Search SteamGridDB</h3>
                   <div className="steamgrid-search-input-wrapper">
-                    <input 
-                      type="text" 
-                      placeholder="Search game..." 
+                    <input
+                      type="text"
+                      placeholder="Search game..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchSteamGrid())}
@@ -554,7 +514,7 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                       Search
                     </button>
                   </div>
-                  
+
                   {searchingStatus && <div style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>{searchingStatus}</div>}
 
                   <div className="steamgrid-results-wrapper">
@@ -571,10 +531,10 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                     {gridResults.length > 0 && (
                       <div className="steamgrid-grids-container">
                         {gridResults.map(grid => (
-                          <img 
-                            key={grid.id} 
-                            src={grid.thumb} 
-                            alt="grid thumb" 
+                          <img
+                            key={grid.id}
+                            src={grid.thumb}
+                            alt="grid thumb"
                             className="steamgrid-grid-image"
                             onClick={() => handleSelectGrid(grid.url)}
                             title="Click to select and crop"
@@ -586,102 +546,102 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
                 </div>
               )}
             </div>
-            
+
             <div className="modal-right">
               <h2>{isExistingGame ? 'Edit Game Details' : 'Add New Game'}</h2>
-              
-              <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1}}>
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
                 <div className="form-group">
                   <label>Title</label>
-                  <input 
-                    name="title" 
-                    value={formData.title} 
-                    onChange={handleChange} 
-                    required 
+                  <input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
                     placeholder="e.g. Cyberpunk 2077"
+                    autoComplete="off"
                   />
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Developer</label>
-                    <input 
-                      name="developer" 
-                      value={formData.developer} 
-                      onChange={handleChange} 
+                    <input
+                      name="developer"
+                      value={formData.developer}
+                      onChange={handleChange}
                       placeholder="e.g. CD Projekt Red"
+                      autoComplete="off"
                     />
                   </div>
                   <div className="form-group">
                     <label>Year</label>
-                    <input 
-                      name="year" 
+                    <input
+                      name="year"
                       type="number"
-                      value={formData.year} 
-                      onChange={handleChange} 
+                      value={formData.year}
+                      onChange={handleChange}
+                      autoComplete="off"
                     />
                   </div>
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Platform</label>
-                    <AutocompleteInput 
-                      name="platform" 
-                      value={formData.platform} 
-                      onChange={handleChange} 
+                    <AutocompleteInput
+                      name="platform"
+                      value={formData.platform}
+                      onChange={handleChange}
                       placeholder="e.g. PC, PS5"
                       options={platforms}
                     />
                   </div>
                   <div className="form-group">
                     <label>Tags</label>
-                    <AutocompleteInput 
-                      name="tags" 
-                      value={formData.tags} 
-                      onChange={handleChange} 
+                    <AutocompleteInput
+                      name="tags"
+                      value={formData.tags}
+                      onChange={handleChange}
                       placeholder="e.g. RPG, Sci-Fi"
                       options={tags}
                     />
                   </div>
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Collections</label>
-                    <AutocompleteInput 
-                      name="collections" 
-                      value={formData.collections} 
-                      onChange={handleChange} 
+                    <AutocompleteInput
+                      name="collections"
+                      value={formData.collections}
+                      onChange={handleChange}
                       placeholder="e.g. Favorites, Masterpieces"
                       options={collections}
                     />
                   </div>
                   <div className="form-group">
                     <label>Status</label>
-                    <select 
+                    <SingleSelectDropdown
                       name="status"
-                      value={formData.status || 'None'} 
+                      value={formData.status || 'None'}
                       onChange={handleChange}
-                      className="form-select"
-                    >
-                      {statuses.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                      options={statuses}
+                      placeholder="Select status"
+                    />
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label>Comment</label>
-                  <textarea 
-                    name="comment" 
-                    value={formData.comment} 
-                    onChange={handleChange} 
+                  <textarea
+                    name="comment"
+                    value={formData.comment}
+                    onChange={handleChange}
                     placeholder="Your thoughts on this game..."
                   />
                 </div>
-                
+
                 <div className="modal-actions" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <div style={{ flex: '1 1 0px', textAlign: 'left' }}>
                     {isExistingGame && (
@@ -693,11 +653,11 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
 
                   <div style={{ flex: '1 1 0px', display: 'flex', justifyContent: 'center' }}>
                     <div className="toggle-wrapper" title="Hide/Show game in collection">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         id="game-hidden-toggle"
-                        name="hidden" 
-                        checked={!!formData.hidden} 
+                        name="hidden"
+                        checked={!!formData.hidden}
                         onChange={(e) => setFormData(prev => ({ ...prev, hidden: e.target.checked }))}
                       />
                       <label htmlFor="game-hidden-toggle" className="toggle-label">
@@ -728,12 +688,15 @@ const GameModal = memo(({ game, onClose, onSave, onDelete, platforms, tags, coll
 function AutocompleteInput({ name, value, onChange, options, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [highlightIndex, setHighlightIndex] = useState(-1);
   const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsOpen(false);
+        setHighlightIndex(-1);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -751,11 +714,23 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
     })
     .sort((a, b) => a.localeCompare(b));
 
+  useEffect(() => {
+    setHighlightIndex(-1);
+  }, [inputText, isOpen]);
+
+  useEffect(() => {
+    if (highlightIndex >= 0 && dropdownRef.current) {
+      const item = dropdownRef.current.children[highlightIndex];
+      if (item) item.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightIndex]);
+
   const handleSelect = (opt) => {
     const newValues = [...selectedValues, opt].sort((a, b) => a.localeCompare(b));
     onChange({ target: { name, value: newValues.join(', ') } });
     setInputText('');
     setIsOpen(false);
+    setHighlightIndex(-1);
   };
 
   const handleRemove = (idx, e) => {
@@ -770,14 +745,28 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      if (inputText.trim()) {
-        e.preventDefault();
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) { setIsOpen(true); return; }
+      setHighlightIndex(prev => prev < filteredOptions.length - 1 ? prev + 1 : 0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) return;
+      setHighlightIndex(prev => prev > 0 ? prev - 1 : filteredOptions.length - 1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isOpen && highlightIndex >= 0 && filteredOptions[highlightIndex]) {
+        handleSelect(filteredOptions[highlightIndex]);
+      } else if (inputText.trim()) {
         const newValues = [...selectedValues, inputText.trim()].sort((a, b) => a.localeCompare(b));
         onChange({ target: { name, value: newValues.join(', ') } });
         setInputText('');
         setIsOpen(false);
+        setHighlightIndex(-1);
       }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setHighlightIndex(-1);
     } else if (e.key === 'Backspace' && !inputText && selectedValues.length > 0) {
       const newValues = selectedValues.slice(0, -1);
       onChange({ target: { name, value: newValues.join(', ') } });
@@ -785,7 +774,7 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
   };
 
   return (
-    <div className="autocomplete-wrapper" ref={wrapperRef}>
+    <div className="autocomplete-wrapper" ref={wrapperRef} onBlur={(e) => { if (!wrapperRef.current?.contains(e.relatedTarget)) { setIsOpen(false); setHighlightIndex(-1); } }}>
       <div className="multi-input-container" onClick={() => wrapperRef.current?.querySelector('input')?.focus()}>
         {selectedValues.map((val, i) => (
           <span key={i} className="multi-tag">
@@ -793,7 +782,7 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
             <span className="multi-tag-remove" onClick={(e) => handleRemove(i, e)}>×</span>
           </span>
         ))}
-        <input 
+        <input
           value={inputText}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
@@ -801,23 +790,27 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
           placeholder={selectedValues.length === 0 ? placeholder : ''}
           autoComplete="off"
           className="multi-input-field"
-          style={{ 
-            border: 'none', 
-            background: 'transparent', 
-            outline: 'none', 
-            color: 'var(--text-main)', 
-            flex: '1 1 0px', 
-            minWidth: '0', 
-            padding: '2px 0', 
-            fontFamily: 'inherit', 
-            fontSize: 'inherit' 
+          style={{
+            border: 'none',
+            background: 'transparent',
+            outline: 'none',
+            color: 'var(--text-main)',
+            flex: '1 1 0px',
+            minWidth: '0',
+            padding: '2px 0',
+            fontFamily: 'inherit',
+            fontSize: 'inherit'
           }}
         />
       </div>
       {isOpen && filteredOptions.length > 0 && (
-        <div className="autocomplete-dropdown">
-          {filteredOptions.map(opt => (
-            <div key={opt} className="autocomplete-item" onClick={() => handleSelect(opt)}>
+        <div className="autocomplete-dropdown" ref={dropdownRef} onMouseMove={() => setHighlightIndex(-1)}>
+          {filteredOptions.map((opt, i) => (
+            <div
+              key={opt}
+              className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}`}
+              onClick={() => handleSelect(opt)}
+            >
               {opt}
             </div>
           ))}
@@ -826,3 +819,174 @@ function AutocompleteInput({ name, value, onChange, options, placeholder }) {
     </div>
   );
 }
+
+function SingleSelectDropdown({ name, value, onChange, options, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setHighlightIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (highlightIndex >= 0 && dropdownRef.current) {
+      const item = dropdownRef.current.children[highlightIndex];
+      if (item) item.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightIndex]);
+
+  const handleSelect = (opt) => {
+    onChange({ target: { name, value: opt } });
+    setIsOpen(false);
+    setHighlightIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) { setIsOpen(true); setHighlightIndex(options.indexOf(value)); return; }
+      setHighlightIndex(prev => prev < options.length - 1 ? prev + 1 : 0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) return;
+      setHighlightIndex(prev => prev > 0 ? prev - 1 : options.length - 1);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (isOpen && highlightIndex >= 0 && options[highlightIndex]) {
+        handleSelect(options[highlightIndex]);
+      } else {
+        setIsOpen(true);
+        setHighlightIndex(options.indexOf(value));
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setHighlightIndex(-1);
+    }
+  };
+
+  return (
+    <div className="autocomplete-wrapper" ref={wrapperRef} onBlur={(e) => { if (!wrapperRef.current?.contains(e.relatedTarget)) { setIsOpen(false); setHighlightIndex(-1); } }}>
+      <div
+        className="single-select-trigger"
+        tabIndex={0}
+        onClick={() => { setIsOpen(!isOpen); setHighlightIndex(options.indexOf(value)); }}
+        onKeyDown={handleKeyDown}
+      >
+        <span className={value ? '' : 'placeholder-text'}>{value || placeholder || 'Select...'}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+          <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="autocomplete-dropdown" ref={dropdownRef} onMouseMove={() => setHighlightIndex(-1)}>
+          {options.map((opt, i) => (
+            <div
+              key={opt}
+              className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}${opt === value ? ' is-selected' : ''}`}
+              onClick={() => handleSelect(opt)}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterDropdown({ value, onChange, options, allLabel }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const allOptions = ['', ...options];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setHighlightIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (highlightIndex >= 0 && dropdownRef.current) {
+      const item = dropdownRef.current.children[highlightIndex];
+      if (item) item.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightIndex]);
+
+  const handleSelect = (opt) => {
+    onChange(opt);
+    setIsOpen(false);
+    setHighlightIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) { setIsOpen(true); setHighlightIndex(allOptions.indexOf(value)); return; }
+      setHighlightIndex(prev => prev < allOptions.length - 1 ? prev + 1 : 0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) return;
+      setHighlightIndex(prev => prev > 0 ? prev - 1 : allOptions.length - 1);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (isOpen && highlightIndex >= 0 && highlightIndex < allOptions.length) {
+        handleSelect(allOptions[highlightIndex]);
+      } else {
+        setIsOpen(true);
+        setHighlightIndex(allOptions.indexOf(value));
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setHighlightIndex(-1);
+    }
+  };
+
+  const displayLabel = value || allLabel;
+
+  return (
+    <div className="autocomplete-wrapper filter-dropdown-wrapper" ref={wrapperRef} onBlur={(e) => { if (!wrapperRef.current?.contains(e.relatedTarget)) { setIsOpen(false); setHighlightIndex(-1); } }}>
+      <div
+        className="filter-select-trigger"
+        tabIndex={0}
+        onClick={() => { setIsOpen(!isOpen); setHighlightIndex(allOptions.indexOf(value)); }}
+        onKeyDown={handleKeyDown}
+      >
+        <Filter size={16} style={{ flexShrink: 0, opacity: 0.5 }} />
+        <span className={value ? '' : 'placeholder-text'}>{displayLabel}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: 0.5, marginLeft: 'auto', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+          <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="autocomplete-dropdown" ref={dropdownRef} onMouseMove={() => setHighlightIndex(-1)}>
+          {allOptions.map((opt, i) => (
+            <div
+              key={opt || '__all__'}
+              className={`autocomplete-item${i === highlightIndex ? ' is-highlighted' : ''}${opt === value ? ' is-selected' : ''}`}
+              onClick={() => handleSelect(opt)}
+            >
+              {opt || allLabel}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+

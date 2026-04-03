@@ -24,7 +24,7 @@ A self-hosted game collection tracker with a premium dark UI. Manage your librar
 
 ## 📸 Screenshots
 
-*Add your screenshots here*
+*TODO*
 
 ## 🛠 Tech Stack
 
@@ -176,7 +176,6 @@ node scripts/import_gog.cjs
 
 - Requires your GOG profile to be public
 - Adds `GOG` platform tag to duplicates
-- Fetches developer and year from the GOG API
 
 ## 📁 Project Structure
 
