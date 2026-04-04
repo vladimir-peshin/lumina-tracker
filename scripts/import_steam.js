@@ -1,22 +1,44 @@
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+import { Database } from 'bun:sqlite';
+import path from 'node:path';
 
 const API_KEY = process.env.STEAM_API_KEY;
 const STEAM_ID = process.env.STEAM_ID;
-const DATA_FILE = path.join(__dirname, '..', 'data.json');
+const DB_FILE = path.join(import.meta.dir, '..', 'games.sqlite');
 
 if (!API_KEY || !STEAM_ID) {
   console.error('Error: STEAM_API_KEY and STEAM_ID must be set in .env file.');
   process.exit(1);
 }
 
+const db = new Database(DB_FILE);
+
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetchGameDetails(appId) {
+async function fetchGameDetails(appId, gameName) {
   try {
+    // 1. Try to extract year from title first (highest priority)
+    const titleYearMatch = gameName?.match(/\((\d{4})\)/);
+    let extratedYear = titleYearMatch ? parseInt(titleYearMatch[1]) : null;
+
+    // 2. Try SteamGridDB for original release year (very reliable)
+    let sgdbYear = null;
+    const sgdbKey = process.env.STEAMGRIDDB_API_KEY;
+    if (sgdbKey) {
+      try {
+        const sgdbResponse = await fetch(`https://www.steamgriddb.com/api/v2/games/steam/${appId}`, {
+          headers: { 'Authorization': `Bearer ${sgdbKey}` }
+        });
+        if (sgdbResponse.ok) {
+          const sgdbData = await sgdbResponse.json();
+          if (sgdbData.success && sgdbData.data.release_date) {
+            sgdbYear = new Date(sgdbData.data.release_date * 1000).getFullYear();
+          }
+        }
+      } catch (e) { /* ignore sgdb errors */ }
+    }
+
     const url = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
     const response = await fetch(url);
     const data = await response.json();
@@ -24,16 +46,20 @@ async function fetchGameDetails(appId) {
     if (data[appId] && data[appId].success) {
       const details = data[appId].data;
       if (details.type !== 'game') {
-        return null; // Skip DLCs, soundtracks, etc.
+        return null;
       }
 
       const developer = details.developers ? details.developers.join(', ') : 'Unknown';
       const releaseDate = details.release_date ? details.release_date.date : '';
-      const year = releaseDate ? parseInt(releaseDate.split(',').pop().trim()) : 0;
+      let steamApiYear = releaseDate ? parseInt(releaseDate.split(',').pop().trim()) : null;
+      if (isNaN(steamApiYear)) steamApiYear = null;
+
+      // Prefer extracted title year, then SteamGridDB year, then Steam API year
+      const finalYear = extratedYear || sgdbYear || steamApiYear;
 
       return {
         developer,
-        year: isNaN(year) ? 0 : year
+        year: finalYear
       };
     }
   } catch (err) {
@@ -45,18 +71,6 @@ async function fetchGameDetails(appId) {
 async function importSteamGames() {
   console.log('--- Steam Import Script ---');
   
-  // 1. Read existing games to avoid duplicates
-  let existingGames = [];
-  try {
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    existingGames = JSON.parse(data);
-  } catch (err) {
-    console.log('Could not read data.json, starting fresh.');
-  }
-
-  const existingTitles = new Set(existingGames.map(g => g.title.toLowerCase()));
-
-  // 2. Fetch owned games
   console.log('Fetching owned games list...');
   const ownedGamesUrl = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${API_KEY}&steamid=${STEAM_ID}&format=json&include_appinfo=1`;
   
@@ -68,22 +82,23 @@ async function importSteamGames() {
 
   let importedCount = 0;
   let skippedCount = 0;
-  let maxId = existingGames.length > 0 ? Math.max(...existingGames.map(g => g.id)) : 0;
+  
+  const getGame = db.prepare('SELECT id, title, platform FROM games WHERE LOWER(title) = ?');
+  const updatePlatform = db.prepare('UPDATE games SET platform = ? WHERE id = ?');
+  const insertGame = db.prepare(`
+    INSERT INTO games (title, developer, year, platform, tags, collections, status, comment, cover, hidden)
+    VALUES ($title, $developer, $year, $platform, '', '', 'None', '', null, 0)
+  `);
 
   for (const game of steamGames) {
-    // 1. Re-read data.json to get the absolute latest state
-    const currentData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    const existingGameIndex = currentData.findIndex(g => g.title.toLowerCase() === game.name.toLowerCase());
+    const existingGame = getGame.get(game.name.toLowerCase());
 
-    if (existingGameIndex !== -1) {
-      // Game exists, check platform
-      const existingGame = currentData[existingGameIndex];
-      const platforms = existingGame.platform.split(',').map(p => p.trim());
+    if (existingGame) {
+      const platforms = (existingGame.platform || '').split(',').map(p => p.trim()).filter(Boolean);
       if (!platforms.includes('Steam')) {
         platforms.push('Steam');
-        existingGame.platform = platforms.join(', ');
+        updatePlatform.run(platforms.join(', '), existingGame.id);
         console.log(`[Update] Added Steam platform to: ${game.name}`);
-        fs.writeFileSync(DATA_FILE, JSON.stringify(currentData, null, 2));
       } else {
         console.log(`[Skip] Already has Steam platform: ${game.name}`);
       }
@@ -91,27 +106,17 @@ async function importSteamGames() {
     }
 
     console.log(`[Fetch] Details for: ${game.name} (${game.appid})...`);
-    const details = await fetchGameDetails(game.appid);
+    const details = await fetchGameDetails(game.appid, game.name);
     
     if (details) {
-      const newMaxId = currentData.length > 0 ? Math.max(...currentData.map(g => g.id)) : 0;
-      
-      const newGame = {
-        id: newMaxId + 1,
-        title: game.name,
-        developer: details.developer,
-        year: details.year,
-        platform: 'Steam',
-        tags: '',
-        comment: '',
-        cover: ''
-      };
-      
-      currentData.push(newGame);
+      insertGame.run({
+        $title: game.name,
+        $developer: details.developer,
+        $year: details.year,
+        $platform: 'Steam'
+      });
       importedCount++;
       console.log(`[Success] Added: ${game.name}`);
-      
-      fs.writeFileSync(DATA_FILE, JSON.stringify(currentData, null, 2));
     } else {
       console.log(`[Skip] Not a game (DLC/etc): ${game.name}`);
       skippedCount++;

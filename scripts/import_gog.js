@@ -1,14 +1,15 @@
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+import { Database } from 'bun:sqlite';
+import path from 'node:path';
 
 const GOG_USERNAME = process.env.GOG_USERNAME;
-const DATA_FILE = path.join(__dirname, '..', 'data.json');
+const DB_FILE = path.join(import.meta.dir, '..', 'games.sqlite');
 
 if (!GOG_USERNAME) {
   console.error('Error: GOG_USERNAME must be set in .env file.');
   process.exit(1);
 }
+
+const db = new Database(DB_FILE);
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,15 +17,29 @@ async function sleep(ms) {
 
 async function fetchGOGProductDetails(productId) {
   try {
-    const url = `https://api.gog.com/products/${productId}`;
+    const url = `https://api.gog.com/v2/games/${productId}`;
     const response = await fetch(url);
     const data = await response.json();
     
-    const developer = data.developer || 'Unknown';
-    const releaseDate = data.release_date || '';
-    const year = releaseDate ? parseInt(releaseDate.split('-')[0]) : 0;
+    let developer = 'Unknown';
+    if (data._embedded && data._embedded.developers && data._embedded.developers.length > 0) {
+      developer = data._embedded.developers.map(d => d.name).join(', ');
+    } else if (data._embedded && data._embedded.product && data._embedded.product.developers && data._embedded.product.developers.length > 0) {
+      developer = data._embedded.product.developers.map(d => d.name).join(', ');
+    }
     
-    return { developer, year: isNaN(year) ? 0 : year };
+    let releaseDate = '';
+    if (data._embedded && data._embedded.product) {
+      releaseDate = data._embedded.product.globalReleaseDate || data._embedded.product.gogReleaseDate || '';
+    }
+    
+    let year = null;
+    if (releaseDate) {
+      const parsedYear = parseInt(releaseDate.split('-')[0]);
+      if (!isNaN(parsedYear)) year = parsedYear;
+    }
+    
+    return { developer, year };
   } catch (err) {
     console.error(`Error fetching GOG details for ${productId}:`, err.message);
   }
@@ -38,6 +53,13 @@ async function importGOGGames() {
   let updatedCount = 0;
   let page = 1;
   let totalPages = 1;
+
+  const getGame = db.prepare('SELECT id, title, platform FROM games WHERE LOWER(title) = ?');
+  const updatePlatform = db.prepare('UPDATE games SET platform = ? WHERE id = ?');
+  const insertGame = db.prepare(`
+    INSERT INTO games (title, developer, year, platform, tags, collections, status, comment, cover, hidden)
+    VALUES ($title, $developer, $year, $platform, '', '', 'None', '', null, 0)
+  `);
 
   do {
     console.log(`Fetching page ${page}...`);
@@ -63,20 +85,15 @@ async function importGOGGames() {
       const gogGame = item.game;
       if (!gogGame || !gogGame.title) continue;
 
-      // Re-read data.json to get the absolute latest state
-      const currentData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      const existingGameIndex = currentData.findIndex(g => g.title.toLowerCase() === gogGame.title.toLowerCase());
+      const existingGame = getGame.get(gogGame.title.toLowerCase());
 
-      if (existingGameIndex !== -1) {
-        // Game exists, update platform
-        const existingGame = currentData[existingGameIndex];
-        const platforms = existingGame.platform.split(',').map(p => p.trim());
+      if (existingGame) {
+        const platforms = (existingGame.platform || '').split(',').map(p => p.trim()).filter(Boolean);
         if (!platforms.includes('GOG')) {
           platforms.push('GOG');
-          existingGame.platform = platforms.join(', ');
+          updatePlatform.run(platforms.join(', '), existingGame.id);
           updatedCount++;
           console.log(`[Update] Added GOG platform to: ${gogGame.title}`);
-          fs.writeFileSync(DATA_FILE, JSON.stringify(currentData, null, 2));
         } else {
           console.log(`[Skip] Already has GOG platform: ${gogGame.title}`);
         }
@@ -85,24 +102,17 @@ async function importGOGGames() {
 
       console.log(`[Fetch] Details for: ${gogGame.title}...`);
       const details = await fetchGOGProductDetails(gogGame.id);
-      const newMaxId = currentData.length > 0 ? Math.max(...currentData.map(g => g.id)) : 0;
 
-      const newGame = {
-        id: newMaxId + 1,
-        title: gogGame.title,
-        developer: details ? details.developer : 'Unknown',
-        year: details ? details.year : 0,
-        platform: 'GOG',
-        tags: '',
-        comment: '',
-        cover: ''
-      };
+      insertGame.run({
+        $title: gogGame.title,
+        $developer: details ? details.developer : 'Unknown',
+        $year: details ? details.year : null,
+        $platform: 'GOG'
+      });
 
-      currentData.push(newGame);
       importedCount++;
       console.log(`[Success] Added: ${gogGame.title}`);
       
-      fs.writeFileSync(DATA_FILE, JSON.stringify(currentData, null, 2));
       await sleep(1000); // Respect GOG API
     }
 
