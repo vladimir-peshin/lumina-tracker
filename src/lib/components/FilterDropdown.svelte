@@ -80,7 +80,7 @@
 		tabindex="0"
 		role="button"
 		onmousedown={(e) => {
-			e.preventDefault(); // allow focus to stay if needed, or prevent blur
+			e.preventDefault();
 			isOpen = !isOpen;
 			highlightIndex = allOptions.indexOf(value);
 		}}

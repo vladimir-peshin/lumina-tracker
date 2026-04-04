@@ -18,11 +18,9 @@ async function sleep(ms) {
 
 async function fetchGameDetails(appId, gameName) {
   try {
-    // 1. Try to extract year from title first (highest priority)
     const titleYearMatch = gameName?.match(/\((\d{4})\)/);
     let extratedYear = titleYearMatch ? parseInt(titleYearMatch[1]) : null;
 
-    // 2. Try SteamGridDB for original release year (very reliable)
     let sgdbYear = null;
     const sgdbKey = process.env.STEAMGRIDDB_API_KEY;
     if (sgdbKey) {
@@ -54,7 +52,6 @@ async function fetchGameDetails(appId, gameName) {
       let steamApiYear = releaseDate ? parseInt(releaseDate.split(',').pop().trim()) : null;
       if (isNaN(steamApiYear)) steamApiYear = null;
 
-      // Prefer extracted title year, then SteamGridDB year, then Steam API year
       const finalYear = extratedYear || sgdbYear || steamApiYear;
 
       return {

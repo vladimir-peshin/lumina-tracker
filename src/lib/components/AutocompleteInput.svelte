@@ -37,8 +37,6 @@
 	});
 
 	$effect(() => {
-		if (isOpen) { /* dependency for highlight reset */ }
-		if (inputText !== undefined) { /* dependency */ }
 		highlightIndex = -1;
 	});
 

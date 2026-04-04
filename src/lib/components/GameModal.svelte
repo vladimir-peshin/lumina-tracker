@@ -17,13 +17,11 @@
 		statuses = []
 	} = $props();
 
-	// Avoid mutating the original game prop directly
 	// svelte-ignore state_referenced_locally
 	let formData = $state({ ...game });
 
 	let fileInputRef = $state();
 
-	// SteamGrid search states
 	let isSearchingGrid = $state(false);
 	// svelte-ignore state_referenced_locally
 	let searchQuery = $state(game.title || '');
@@ -31,14 +29,12 @@
 	let gridResults = $state([]);
 	let searchingStatus = $state('');
 
-	// Cropper states
 	let cropMode = $state(false);
 	let imageToCrop = $state(null);
 	let crop = $state({ x: 0, y: 0 });
 	let zoom = $state(1);
 	let croppedAreaPixels = $state(null);
 
-	// Keyboard Esc to close
 	onMount(() => {
 		function handleKeyDown(e) {
 			if (e.key === 'Escape') onClose();

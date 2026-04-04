@@ -1,9 +1,5 @@
-/* src/lib/server/db.js */
-import { Database } from 'bun:sqlite'
-
 const db = new Database('games.sqlite')
 
-// Убедимся, что таблица готова
 db.run(`
 	CREATE TABLE IF NOT EXISTS games (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,

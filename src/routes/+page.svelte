@@ -24,7 +24,6 @@
 	let sentinelNode = $state();
 	let observer = null;
 
-	// Reset scroll when filters change
 	$effect(() => {
 		search;
 		platformFilter;
@@ -35,7 +34,6 @@
 		visibleCount = 200;
 	});
 
-	// Derive properties
 	let platforms = $derived(
 		[...new Set(games.flatMap((g) => (g.platform || '').split(',').map((p) => p.trim()).filter(Boolean)))]
 			.sort((a, b) => a.localeCompare(b))

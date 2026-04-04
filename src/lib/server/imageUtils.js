@@ -10,7 +10,6 @@ export function processCoverImage(game) {
 			const buffer = Buffer.from(matches[2], 'base64');
 			const filename = `cover_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.${ext}`;
 			
-			// Always relative to execution or static build (in bun, process.cwd() is project root)
 			const coversDir = path.join(process.cwd(), 'static', 'covers');
 			
 			if (!fs.existsSync(coversDir)) {

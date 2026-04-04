@@ -7,7 +7,6 @@ export async function GET() {
 		const stmt = db.prepare('SELECT * FROM games ORDER BY id DESC');
 		const games = stmt.all();
 		
-		// Map `hidden` INTEGER to boolean to match React expectations perfectly
 		const mappedGames = games.map(g => ({
 			...g,
 			hidden: g.hidden === 1
@@ -16,7 +15,7 @@ export async function GET() {
 		return json(mappedGames);
 	} catch (error) {
 		console.error(error);
-		return json({ error: 'Failed to read SVELTEKIT sqlite data' }, { status: 500 });
+		return json({ error: 'Failed to read database' }, { status: 500 });
 	}
 }
 
