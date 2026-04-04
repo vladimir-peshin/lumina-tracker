@@ -28,6 +28,9 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# IDE
+.vscode/
+
 # Assets
 /static/covers/
 
