@@ -1,5 +1,5 @@
 <script>
-	import { Search, Plus, Eye, EyeOff, Image as ImageIcon } from 'lucide-svelte';
+	import { Search, Plus, Eye, EyeOff, X, Image as ImageIcon } from 'lucide-svelte';
 	import { onMount, tick } from 'svelte';
 	import FilterDropdown from '$lib/components/FilterDropdown.svelte';
 	import GameModal from '$lib/components/GameModal.svelte';
@@ -207,6 +207,17 @@
 			placeholder="Search by title or developer..."
 			bind:value={search}
 		/>
+		{#if search}
+			<button
+				type="button"
+				class="clear-search-button"
+				onclick={() => (search = '')}
+				title="Clear search"
+				aria-label="Clear search"
+			>
+				<X size={16} />
+			</button>
+		{/if}
 	</div>
 
 	<FilterDropdown bind:value={platformFilter} options={platforms} allLabel="All Platforms" />

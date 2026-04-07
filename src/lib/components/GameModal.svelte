@@ -255,12 +255,25 @@
 							Search SteamGridDB
 						</h3>
 						<div class="steamgrid-search-input-wrapper">
-							<input
-								type="text"
-								placeholder="Search game..."
-								bind:value={searchQuery}
-								onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchSteamGrid())}
-							/>
+							<div style="position: relative; flex: 1; display: flex;">
+								<input
+									type="text"
+									placeholder="Search game..."
+									bind:value={searchQuery}
+									onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchSteamGrid())}
+								/>
+								{#if searchQuery}
+									<button
+										type="button"
+										class="clear-search-button"
+										onclick={() => (searchQuery = '')}
+										title="Clear search"
+										aria-label="Clear search"
+									>
+										<X size={16} />
+									</button>
+								{/if}
+							</div>
 							<button
 								type="button"
 								class="btn btn-primary"
