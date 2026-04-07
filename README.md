@@ -2,6 +2,12 @@
 
 A minimalist, high-performance video game collection tracker built with **Svelte 5**, **Bun**, and **SQLite**.
 
+<img width="400" alt="list of games" src="https://github.com/user-attachments/assets/082d8c8f-e0ee-4aab-930d-3add87942ab1" />
+<img width="400" alt="Screenshot 2026-04-07 at 18 41 46" src="https://github.com/user-attachments/assets/8d7509a6-4f3c-40e1-a701-8442ed1d4d44" />
+
+
+
+
 ## 🚀 Features
 
 -   **Svelte 5 Runes**: Modern reactivity for a snappy UI.
