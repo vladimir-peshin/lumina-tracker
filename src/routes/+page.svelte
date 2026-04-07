@@ -92,6 +92,21 @@
 		});
 	});
 
+	let totalBaseCount = $derived(
+		showHidden ? games.length : games.filter((g) => !g.hidden).length
+	);
+
+	let isFiltered = $derived(
+		!!(search || platformFilter || tagFilter || collectionFilter || statusFilter)
+	);
+
+	let counterDisplay = $derived.by(() => {
+		if (isFiltered) {
+			return `${filteredGames.length} of ${totalBaseCount} games`;
+		}
+		return `${totalBaseCount} games`;
+	});
+
 	$effect(() => {
 		if (sentinelNode) {
 			if (observer) observer.disconnect();
@@ -193,7 +208,12 @@
 </svelte:head>
 
 <header class="app-header">
-	<h1 class="app-title">Lumina Tracker</h1>
+	<div class="header-main">
+		<h1 class="app-title">Lumina Tracker</h1>
+		<div class="game-counter">
+			{counterDisplay}
+		</div>
+	</div>
 	<button class="btn btn-primary btn-icon" onclick={handleAddClick}>
 		<Plus size={18} /> Add Game
 	</button>
