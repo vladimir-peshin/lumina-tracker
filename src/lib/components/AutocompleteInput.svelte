@@ -37,10 +37,6 @@
 	});
 
 	$effect(() => {
-		highlightIndex = -1;
-	});
-
-	$effect(() => {
 		if (highlightIndex >= 0 && dropdownNode) {
 			const item = dropdownNode.children[highlightIndex];
 			if (item) item.scrollIntoView({ block: 'nearest' });
@@ -84,7 +80,7 @@
 				isOpen = false;
 				highlightIndex = -1;
 			}
-		} else if (e.key === 'Escape') {
+		} else if (e.key === 'Escape' || e.key === 'Tab') {
 			isOpen = false;
 			highlightIndex = -1;
 		} else if (e.key === 'Backspace' && !inputText && selectedValues.length > 0) {
@@ -159,7 +155,7 @@
 					class="autocomplete-item {i === highlightIndex ? 'is-highlighted' : ''}"
 					role="option"
                     aria-selected={false}
-					tabindex="0"
+					tabindex="-1"
 					onmousedown={(e) => {
 						e.preventDefault();
 						handleSelect(opt);

@@ -1,12 +1,13 @@
 <script>
 	import { onMount } from 'svelte';
 
-	let { value = $bindable(), options = [], placeholder = '', name = '' } = $props();
+	let { value = $bindable(), options = [], placeholder = '' } = $props();
 
 	let isOpen = $state(false);
 	let highlightIndex = $state(-1);
 	let wrapperNode = $state();
 	let dropdownNode = $state();
+	let focusedByMouse = false;
 
 	function handleClickOutside(event) {
 		if (wrapperNode && !wrapperNode.contains(event.target)) {
@@ -54,7 +55,7 @@
 				isOpen = true;
 				highlightIndex = options.indexOf(value);
 			}
-		} else if (e.key === 'Escape') {
+		} else if (e.key === 'Escape' || e.key === 'Tab') {
 			isOpen = false;
 			highlightIndex = -1;
 		}
@@ -76,9 +77,18 @@
 		tabindex="0"
 		role="button"
 		onmousedown={(e) => {
-			e.preventDefault(); // prevent blur issues
+			e.preventDefault();
+			focusedByMouse = true;
 			isOpen = !isOpen;
 			highlightIndex = options.indexOf(value);
+			e.currentTarget.focus();
+		}}
+		onfocus={() => {
+			if (!focusedByMouse) {
+				isOpen = true;
+				highlightIndex = options.indexOf(value);
+			}
+			focusedByMouse = false;
 		}}
 		onkeydown={handleKeyDown}
 	>
@@ -114,7 +124,7 @@
 					class="autocomplete-item {i === highlightIndex ? 'is-highlighted' : ''} {opt === value ? 'is-selected' : ''}"
 					role="option"
                     aria-selected={opt === value}
-					tabindex="0"
+					tabindex="-1"
 					onmousedown={(e) => {
 						e.preventDefault();
 						handleSelect(opt);

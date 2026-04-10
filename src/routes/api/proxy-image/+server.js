@@ -3,6 +3,15 @@ export async function GET({ url, fetch }) {
 	if (!imageUrl) return new Response('No url', { status: 400 });
 
 	try {
+		const parsed = new URL(imageUrl);
+		if (!parsed.hostname.endsWith('steamgriddb.com')) {
+			return new Response('Domain not allowed', { status: 403 });
+		}
+	} catch {
+		return new Response('Invalid url', { status: 400 });
+	}
+
+	try {
 		const response = await fetch(imageUrl);
 		const contentType = response.headers.get('content-type');
 		const arrayBuffer = await response.arrayBuffer();

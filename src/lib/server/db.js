@@ -1,4 +1,3 @@
-/* src/lib/server/db.js */
 import { Database } from 'bun:sqlite'
 
 const db = new Database('games.sqlite')

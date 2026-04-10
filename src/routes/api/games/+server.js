@@ -2,23 +2,6 @@ import { json } from '@sveltejs/kit';
 import db from '$lib/server/db.js';
 import { processCoverImage } from '$lib/server/imageUtils.js';
 
-export async function GET() {
-	try {
-		const stmt = db.prepare('SELECT * FROM games ORDER BY id DESC');
-		const games = stmt.all();
-		
-		const mappedGames = games.map(g => ({
-			...g,
-			hidden: g.hidden === 1
-		}));
-		
-		return json(mappedGames);
-	} catch (error) {
-		console.error(error);
-		return json({ error: 'Failed to read database' }, { status: 500 });
-	}
-}
-
 export async function POST({ request }) {
 	try {
 		let newGame = await request.json();

@@ -8,6 +8,7 @@
 	let highlightIndex = $state(-1);
 	let wrapperNode = $state();
 	let dropdownNode = $state();
+	let focusedByMouse = false;
 
 	let allOptions = $derived(['', ...options]);
 	let displayLabel = $derived(value || allLabel);
@@ -58,7 +59,7 @@
 				isOpen = true;
 				highlightIndex = allOptions.indexOf(value);
 			}
-		} else if (e.key === 'Escape') {
+		} else if (e.key === 'Escape' || e.key === 'Tab') {
 			isOpen = false;
 			highlightIndex = -1;
 		}
@@ -81,8 +82,17 @@
 		role="button"
 		onmousedown={(e) => {
 			e.preventDefault();
+			focusedByMouse = true;
 			isOpen = !isOpen;
 			highlightIndex = allOptions.indexOf(value);
+			e.currentTarget.focus();
+		}}
+		onfocus={() => {
+			if (!focusedByMouse) {
+				isOpen = true;
+				highlightIndex = allOptions.indexOf(value);
+			}
+			focusedByMouse = false;
 		}}
 		onkeydown={handleKeyDown}
 	>
@@ -119,7 +129,7 @@
 					class="autocomplete-item {i === highlightIndex ? 'is-highlighted' : ''} {opt === value ? 'is-selected' : ''}"
 					role="option"
                     aria-selected={opt === value}
-					tabindex="0"
+					tabindex="-1"
 					onmousedown={(e) => {
 						e.preventDefault();
 						handleSelect(opt);
