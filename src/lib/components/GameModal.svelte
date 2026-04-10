@@ -133,8 +133,13 @@
 	function handleToggleSearch() {
 		if (!isSearchingGrid) {
 			searchQuery = formData.title || '';
+			isSearchingGrid = true;
+			if (searchQuery) {
+				handleSearchSteamGrid();
+			}
+		} else {
+			isSearchingGrid = false;
 		}
-		isSearchingGrid = !isSearchingGrid;
 	}
 
 	function handleSubmit(e) {
