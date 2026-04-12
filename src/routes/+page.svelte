@@ -108,6 +108,11 @@
 	});
 
 	$effect(() => {
+		document.body.style.overflow = isModalOpen ? 'hidden' : '';
+		return () => { document.body.style.overflow = ''; };
+	});
+
+	$effect(() => {
 		if (sentinelNode) {
 			if (observer) observer.disconnect();
 			observer = new IntersectionObserver(
