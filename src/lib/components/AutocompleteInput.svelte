@@ -105,6 +105,7 @@
 		role="button"
 		tabindex="-1"
 		onmousedown={(e) => {
+			if (e.target === inputNode) return;
 			e.preventDefault();
 			inputNode?.focus();
 			isOpen = true;
