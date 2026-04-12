@@ -8,7 +8,7 @@
 
 	// svelte-ignore state_referenced_locally
 	let games = $state([...(data.games || [])]);
-	let STATUSES = ['None', 'Playing', 'Played', 'Finished', 'Dropped'];
+	let STATUSES = ['None', 'Backlog', 'Playing', 'Played', 'Finished', 'Dropped'];
 
 	let search = $state('');
 	let platformFilter = $state('');
