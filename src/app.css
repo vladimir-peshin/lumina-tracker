@@ -26,9 +26,18 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   min-height: 100vh;
-  /* subtle gradient background */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -100;
   background: radial-gradient(circle at top center, #1b1e2a 0%, var(--bg-dark) 100%);
-  background-attachment: fixed;
+  pointer-events: none;
 }
 
 .app-container {
@@ -314,6 +323,9 @@ body {
   animation: fadeIn 0.15s ease;
   padding: 1rem;
   overscroll-behavior: contain;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes fadeIn {
@@ -339,6 +351,9 @@ body {
   overflow: hidden;
   position: relative;
   animation: slideUp 0.2s cubic-bezier(0, 0, 0.2, 1);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes slideUp {
@@ -399,6 +414,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .form-group {

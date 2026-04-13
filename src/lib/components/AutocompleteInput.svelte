@@ -135,6 +135,7 @@
 			bind:value={inputText}
 			onfocus={() => (isOpen = true)}
 			onclick={() => (isOpen = true)}
+			oninput={() => (isOpen = true)}
 			onkeydown={handleKeyDown}
 			placeholder={selectedValues.length === 0 ? placeholder : ''}
 			autocomplete="off"
