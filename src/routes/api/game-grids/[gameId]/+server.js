@@ -27,15 +27,16 @@ export async function GET({ params, fetch }) {
 			const steamId = infoData?.data?.platforms?.steam?.id;
 
 			if (steamId) {
-				const steamCapsuleUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900_2x.jpg`;
+				const steamThumbUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900.jpg`;
+				const steamFullUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900_2x.jpg`;
 				
-				// Verify if the image exists (some games might not have it)
-				const headCheck = await fetch(steamCapsuleUrl, { method: 'HEAD' });
+				// Verify if at least the thumb exists (usually if thumb exists, 2x also exists)
+				const headCheck = await fetch(steamThumbUrl, { method: 'HEAD' });
 				if (headCheck.ok) {
 					grids.unshift({
 						id: `steam-cdn-${steamId}`,
-						url: steamCapsuleUrl,
-						thumb: steamCapsuleUrl,
+						url: steamFullUrl,
+						thumb: steamThumbUrl,
 						style: 'official',
 						author: { name: 'Steam CDN' }
 					});
