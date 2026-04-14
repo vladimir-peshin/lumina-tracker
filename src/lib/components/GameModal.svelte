@@ -249,16 +249,11 @@
 					style="margin-top: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.85rem; padding: 0.5rem 1rem; align-self: center;"
 					onclick={handleToggleSearch}
 				>
-					<Globe size={16} /> {isSearchingGrid ? 'Cancel' : 'SteamGridDB'}
+					<Globe size={16} /> {isSearchingGrid ? 'Cancel' : 'Find cover'}
 				</button>
 
 				{#if isSearchingGrid}
 					<div class="steamgrid-search-container">
-						<h3
-							style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-main); opacity: 0.9;"
-						>
-							Search SteamGridDB
-						</h3>
 						<div class="steamgrid-search-input-wrapper">
 							<div style="position: relative; flex: 1; display: flex;">
 								<input

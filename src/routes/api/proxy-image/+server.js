@@ -4,7 +4,8 @@ export async function GET({ url, fetch }) {
 
 	try {
 		const parsed = new URL(imageUrl);
-		if (!parsed.hostname.endsWith('steamgriddb.com')) {
+		const allowedDomains = ['steamgriddb.com', 'steamstatic.com'];
+		if (!allowedDomains.some(domain => parsed.hostname.endsWith(domain))) {
 			return new Response('Domain not allowed', { status: 403 });
 		}
 	} catch {
