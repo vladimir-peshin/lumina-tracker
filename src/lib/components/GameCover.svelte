@@ -4,8 +4,8 @@
 
 <div class="game-cover-container {className}">
     {#if src}
-        <img src={src} alt="" class="cover-blur-bg" aria-hidden="true" decoding="async" loading="lazy" />
-        <img src={src} alt={alt} class="cover-main-img" decoding="async" loading="lazy" />
+        <img src={src} alt="" class="cover-blur-bg" aria-hidden="true" decoding="async" loading="lazy" draggable="false" />
+        <img src={src} alt={alt} class="cover-main-img" decoding="async" loading="lazy" draggable="false" />
     {:else}
         <div class="cover-placeholder">
             {@render placeholder?.()}
