@@ -457,18 +457,6 @@ body::before {
   min-height: 80px;
 }
 
-/* Remove arrows from number input */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;

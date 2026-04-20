@@ -110,11 +110,12 @@
 	}
 
 	async function handleSearchSteamGrid() {
-		if (!searchQuery) return;
+		const trimmedQuery = searchQuery.trim();
+		if (!trimmedQuery) return;
 		searchingStatus = 'Searching games...';
 		gridResults = [];
 		try {
-			const res = await fetch(`/api/search-games?query=${encodeURIComponent(searchQuery)}`);
+			const res = await fetch(`/api/search-games?query=${encodeURIComponent(trimmedQuery)}`);
 			const data = await res.json();
 			searchResults = data;
 			if (data.length === 0) searchingStatus = 'No games found.';
@@ -405,6 +406,9 @@
 										formData.year = currentYear;
 									}
 								}}
+								onblur={(e) => {
+									formData.year = e.target.value.trim();
+								}}
 							/>
 						</div>
 					</div>
@@ -458,6 +462,9 @@
 							name="comment"
 							bind:value={formData.comment}
 							placeholder="Your thoughts on this game..."
+							onblur={(e) => {
+								formData.comment = e.target.value.trim();
+							}}
 						></textarea>
 					</div>
 

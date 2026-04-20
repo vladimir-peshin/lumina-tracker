@@ -51,12 +51,12 @@
 	);
 
 	let filteredGames = $derived.by(() => {
+		const trimmedSearch = search.trim().toLowerCase();
 		const filtered = games.filter((game) => {
-			const searchLower = search.toLowerCase();
 			const matchSearch =
-				!search ||
-				(game.title || '').toLowerCase().includes(searchLower) ||
-				(game.developer || '').toLowerCase().includes(searchLower);
+				!trimmedSearch ||
+				(game.title || '').toLowerCase().includes(trimmedSearch) ||
+				(game.developer || '').toLowerCase().includes(trimmedSearch);
 
 			const matchPlatform = platformFilter
 				? (game.platform || '').split(',').map((p) => p.trim().toLowerCase()).includes(platformFilter.toLowerCase())
@@ -82,10 +82,9 @@
 		return filtered.sort((a, b) => {
 			const titleA = (a.title || '').toLowerCase();
 			const titleB = (b.title || '').toLowerCase();
-			if (search) {
-				const searchLower = search.toLowerCase();
-				const aStarts = titleA.startsWith(searchLower);
-				const bStarts = titleB.startsWith(searchLower);
+			if (trimmedSearch) {
+				const aStarts = titleA.startsWith(trimmedSearch);
+				const bStarts = titleB.startsWith(trimmedSearch);
 				if (aStarts && !bStarts) return -1;
 				if (!aStarts && bStarts) return 1;
 			}
