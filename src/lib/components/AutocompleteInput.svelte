@@ -143,8 +143,15 @@
 						e.preventDefault();
 						e.stopPropagation();
 						handleRemove(i, e);
-					}}>×</span
-				>
+					}}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							e.stopPropagation();
+							handleRemove(i, e);
+						}
+					}}
+				>×</span>
 			</span>
 		{/each}
 		<input

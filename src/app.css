@@ -428,7 +428,8 @@ body::before {
   gap: 0.5rem;
 }
 
-.form-group label {
+.form-group label,
+.form-label-text {
   font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -804,6 +805,8 @@ input[type="number"] {
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .autocomplete-dropdown {

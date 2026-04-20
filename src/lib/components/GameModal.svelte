@@ -37,7 +37,15 @@
 
 	onMount(() => {
 		function handleKeyDown(e) {
-			if (e.key === 'Escape') onClose();
+			if (e.key === 'Escape') {
+				onClose();
+			} else if (e.key === 'Enter') {
+				// Don't trigger if focused on elements that have their own Enter behavior
+				const tag = e.target.tagName;
+				if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'INPUT') return;
+				
+				onSave(formData);
+			}
 		}
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
@@ -334,7 +342,7 @@
 					style="display: flex; flex-direction: column; gap: 1rem; flex: 1;"
 				>
 					<div class="form-group">
-						<label for="title">Title</label>
+						<span class="form-label-text">Title</span>
 						<input
                             id="title"
 							name="title"
@@ -355,7 +363,7 @@
 
 					<div class="form-row">
 						<div class="form-group">
-							<label for="developer">Developer</label>
+							<span class="form-label-text">Developer</span>
 							<input
                                 id="developer"
 								name="developer"
@@ -373,11 +381,10 @@
 							/>
 						</div>
 						<div class="form-group">
-							<label for="year">Year</label>
+							<span class="form-label-text">Year</span>
 							<input
                                 id="year"
 								name="year"
-								type="number"
 								bind:value={formData.year}
 								autocomplete="off"
 							/>
@@ -386,56 +393,48 @@
 
 					<div class="form-row">
 						<div class="form-group">
-							<label>
-								Platform
-								<AutocompleteInput
-									name="platform"
-									bind:value={formData.platform}
-									placeholder="e.g. PC, PS5"
-									options={platforms}
-								/>
-							</label>
+							<span class="form-label-text">Platform</span>
+							<AutocompleteInput
+								name="platform"
+								bind:value={formData.platform}
+								placeholder="e.g. PC, PS5"
+								options={platforms}
+							/>
 						</div>
 						<div class="form-group">
-							<label>
-								Tags
-								<AutocompleteInput
-									name="tags"
-									bind:value={formData.tags}
-									placeholder="e.g. RPG, Sci-Fi"
-									options={tags}
-								/>
-							</label>
+							<span class="form-label-text">Tags</span>
+							<AutocompleteInput
+								name="tags"
+								bind:value={formData.tags}
+								placeholder="e.g. RPG, Sci-Fi"
+								options={tags}
+							/>
 						</div>
 					</div>
 
 					<div class="form-row">
 						<div class="form-group">
-							<label>
-								Collections
-								<AutocompleteInput
-									name="collections"
-									bind:value={formData.collections}
-									placeholder="e.g. Favorites, Masterpieces"
-									options={collections}
-								/>
-							</label>
+							<span class="form-label-text">Collections</span>
+							<AutocompleteInput
+								name="collections"
+								bind:value={formData.collections}
+								placeholder="e.g. Favorites, Masterpieces"
+								options={collections}
+							/>
 						</div>
 						<div class="form-group">
-							<label>
-								Status
-								<SingleSelectDropdown
-									name="status"
-									bind:value={formData.status}
-									options={statuses}
-									placeholder="Select status"
-								/>
-							</label>
+							<span class="form-label-text">Status</span>
+							<SingleSelectDropdown
+								name="status"
+								bind:value={formData.status}
+								options={statuses}
+								placeholder="Select status"
+							/>
 						</div>
 					</div>
 
 					<div class="form-group">
-						<label for="comment">Comment</label>
+						<span class="form-label-text">Comment</span>
 						<textarea
                             id="comment"
 							name="comment"
