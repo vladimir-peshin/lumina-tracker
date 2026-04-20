@@ -61,6 +61,19 @@
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	});
 
+	function autoExpand(e) {
+		const target = e.target;
+		const parent = target.closest('.modal-right');
+		const prevScrollTop = parent ? parent.scrollTop : 0;
+		
+		target.style.height = 'auto';
+		target.style.height = target.scrollHeight + 2 + 'px';
+		
+		if (parent) {
+			parent.scrollTop = prevScrollTop;
+		}
+	}
+
 	function processImageForCrop(imageUrl) {
 		const img = new Image();
 		img.crossOrigin = 'anonymous';
@@ -477,6 +490,8 @@
 							name="comment"
 							bind:value={formData.comment}
 							placeholder="Your thoughts on this game..."
+							onfocus={autoExpand}
+							oninput={autoExpand}
 							onblur={(e) => {
 								formData.comment = e.target.value.trim();
 							}}

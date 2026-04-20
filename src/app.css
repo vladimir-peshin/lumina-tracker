@@ -455,6 +455,7 @@ body::before {
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+  overflow-y: hidden;
 }
 
 .form-group input:focus,
