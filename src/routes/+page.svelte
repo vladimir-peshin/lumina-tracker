@@ -3,6 +3,7 @@
 	import { onMount, tick } from 'svelte';
 	import FilterDropdown from '$lib/components/FilterDropdown.svelte';
 	import GameModal from '$lib/components/GameModal.svelte';
+	import GameCover from '$lib/components/GameCover.svelte';
 
 	let { data } = $props();
 
@@ -273,15 +274,11 @@
 			data-tooltip={game.title || 'Untitled'}
 		>
 			<div class="cover-wrapper">
-				{#if game.cover}
-					<img src={game.cover} alt={game.title} class="cover-image" loading="lazy" />
-				{:else}
-					<div
-						style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);"
-					>
+				<GameCover src={game.cover} alt={game.title} class="cover-image">
+					{#snippet placeholder()}
 						<ImageIcon size={48} color="rgba(255,255,255,0.2)" />
-					</div>
-				{/if}
+					{/snippet}
+				</GameCover>
 			</div>
 			<div class="game-title">{game.title || 'Untitled'}</div>
 		</div>

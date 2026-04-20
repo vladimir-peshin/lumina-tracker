@@ -5,6 +5,7 @@
 	import getCroppedImg from '$lib/utils/cropUtils.js';
 	import AutocompleteInput from './AutocompleteInput.svelte';
 	import SingleSelectDropdown from './SingleSelectDropdown.svelte';
+	import GameCover from './GameCover.svelte';
 
 	let {
 		game,
@@ -56,8 +57,10 @@
 		img.crossOrigin = 'anonymous';
 		img.onload = async () => {
 			const ratio = img.width / img.height;
-			if (Math.abs(ratio - (2 / 3)) < 0.05) {
-				// Fast crop
+			// Allow 2:3, square, and vertical images to bypass forced cropping if the user wants
+			// Ratio <= 1.1 covers vertical ( < 1.0 ) and square ( 1.0 )
+			if (ratio <= 1.1) {
+				// Fast crop (use full image)
 				try {
 					const fullImageBase64 = await getCroppedImg(imageUrl, {
 						x: 0,
@@ -229,7 +232,14 @@
 						style="flex: none; height: {formData.cover ? 'auto' : '350px'};"
 					>
 						{#if formData.cover}
-							<img src={formData.cover} alt="Cover Preview" class="modal-cover" />
+							<GameCover src={formData.cover} alt="Cover Preview" class="modal-cover">
+								{#snippet placeholder()}
+									<div class="empty-cover-placeholder">
+										<ImageIcon size={48} />
+										<span>Upload Local Image</span>
+									</div>
+								{/snippet}
+							</GameCover>
 							<div class="cover-upload-overlay">
 								<Upload size={32} />
 								<span>Click to upload local</span>
