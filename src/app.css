@@ -105,8 +105,7 @@ body::before {
 
 .search-input-wrapper {
   position: relative;
-  flex: 1;
-  min-width: 250px;
+  flex: 1 1 150px;
 }
 
 .search-icon {
@@ -803,6 +802,10 @@ input[type="number"] {
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
+}
+
+.modal-content .autocomplete-wrapper,
+.modal-content .single-select-trigger {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -880,8 +883,9 @@ input[type="number"] {
 
 /* Filter Dropdown on Main Page */
 .filter-dropdown-wrapper {
-  min-width: 150px;
+  min-width: 130px;
   width: auto;
+  flex-shrink: 0;
 }
 
 .filter-select-trigger {

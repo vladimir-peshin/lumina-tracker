@@ -4,8 +4,8 @@
 
 <div class="game-cover-container {className}">
     {#if src}
-        <img src={src} alt="" class="cover-blur-bg" aria-hidden="true" />
-        <img src={src} alt={alt} class="cover-main-img" loading="lazy" />
+        <img src={src} alt="" class="cover-blur-bg" aria-hidden="true" decoding="async" loading="lazy" />
+        <img src={src} alt={alt} class="cover-main-img" decoding="async" loading="lazy" />
     {:else}
         <div class="cover-placeholder">
             {@render placeholder?.()}
@@ -23,18 +23,23 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Optimization: skip rendering for off-screen items */
+        content-visibility: auto;
     }
 
     .cover-blur-bg {
         position: absolute;
-        inset: -15px; /* Offset to hide edges when blurred */
-        width: calc(100% + 30px);
-        height: calc(100% + 30px);
+        inset: -20px; /* Offset to hide edges when blurred */
+        width: calc(100% + 40px);
+        height: calc(100% + 40px);
         object-fit: cover;
         filter: blur(12px) brightness(0.6);
         z-index: 0;
         pointer-events: none;
         user-select: none;
+        /* Optimization: GPU acceleration for complex filters */
+        transform: translateZ(0);
+        backface-visibility: hidden;
     }
 
     .cover-main-img {

@@ -226,7 +226,7 @@
 </header>
 
 <div class="controls">
-	<div class="search-input-wrapper" style="flex: 1 1 300px;">
+	<div class="search-input-wrapper">
 		<Search class="search-icon" size={18} />
 		<input
 			type="text"
@@ -254,6 +254,7 @@
 	<button
 		class="btn {showHidden ? 'btn-primary' : 'btn-secondary'} btn-icon"
 		onclick={() => (showHidden = !showHidden)}
+		style="flex-shrink: 0;"
 		title={showHidden ? 'Hide hidden games' : 'Show hidden games'}
 	>
 		{#if showHidden}
