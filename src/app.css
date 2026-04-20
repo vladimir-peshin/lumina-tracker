@@ -413,13 +413,14 @@ body::before {
 
 .modal-right {
   width: 60%;
-  padding: 1.8rem 2.2rem;
+  padding: 1.8rem 2.2rem 2rem 2.2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   overflow-y: auto;
   min-height: 0;
   overscroll-behavior: contain;
+  scroll-padding-bottom: 120px;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform: translateZ(0);
@@ -453,9 +454,9 @@ body::before {
 }
 
 .form-group textarea {
-  resize: vertical;
+  resize: none;
   min-height: 80px;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .form-group input:focus,
@@ -858,7 +859,7 @@ body::before {
   min-height: 42px;
   transition: all 0.2s;
   font-family: inherit;
-  font-size: inherit;
+  font-size: 0.9rem;
   user-select: none;
 }
 
@@ -929,6 +930,7 @@ body::before {
   transition: all 0.2s;
   align-items: center;
   min-height: 42px;
+  font-size: 0.9rem;
 }
 
 .multi-input-container:focus-within {
@@ -944,7 +946,7 @@ body::before {
   color: #fff;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 500;
   white-space: nowrap;
 }

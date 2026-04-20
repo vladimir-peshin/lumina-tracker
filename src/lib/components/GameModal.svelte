@@ -483,7 +483,7 @@
 						</div>
 					</div>
 
-					<div class="form-group">
+					<div class="form-group" style="margin-bottom: 2.5rem;">
 						<span class="form-label-text">Comment</span>
 						<textarea
                             id="comment"
@@ -494,6 +494,7 @@
 							oninput={autoExpand}
 							onblur={(e) => {
 								formData.comment = e.target.value.trim();
+								e.target.style.height = 'auto'; // Shrink back to min-height
 							}}
 						></textarea>
 					</div>
