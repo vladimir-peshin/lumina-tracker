@@ -455,7 +455,7 @@ body::before {
 
 .form-group textarea {
   resize: none;
-  min-height: 80px;
+  min-height: 105px;
   overflow-y: auto;
 }
 

@@ -483,7 +483,7 @@
 						</div>
 					</div>
 
-					<div class="form-group" style="margin-bottom: 2.5rem;">
+					<div class="form-group">
 						<span class="form-label-text">Comment</span>
 						<textarea
                             id="comment"
