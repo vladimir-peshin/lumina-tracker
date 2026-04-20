@@ -48,16 +48,28 @@
 			if (!isOpen) return;
 			highlightIndex = highlightIndex > 0 ? highlightIndex - 1 : options.length - 1;
 		} else if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
+			if (isOpen) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (highlightIndex >= 0 && options[highlightIndex]) {
+					handleSelect(options[highlightIndex]);
+				} else {
+					isOpen = false;
+				}
+			}
+		} else if (e.key === 'Tab') {
 			if (isOpen && highlightIndex >= 0 && options[highlightIndex]) {
 				handleSelect(options[highlightIndex]);
-			} else {
-				isOpen = true;
-				highlightIndex = options.indexOf(value);
 			}
-		} else if (e.key === 'Escape' || e.key === 'Tab') {
 			isOpen = false;
 			highlightIndex = -1;
+		} else if (e.key === 'Escape') {
+			if (isOpen) {
+				e.preventDefault();
+				e.stopPropagation();
+				isOpen = false;
+				highlightIndex = -1;
+			}
 		}
 	}
 </script>

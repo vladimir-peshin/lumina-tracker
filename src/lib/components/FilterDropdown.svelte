@@ -52,16 +52,28 @@
 			if (!isOpen) return;
 			highlightIndex = highlightIndex > 0 ? highlightIndex - 1 : allOptions.length - 1;
 		} else if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
+			if (isOpen) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (highlightIndex >= 0 && highlightIndex < allOptions.length) {
+					handleSelect(allOptions[highlightIndex]);
+				} else {
+					isOpen = false;
+				}
+			}
+		} else if (e.key === 'Tab') {
 			if (isOpen && highlightIndex >= 0 && highlightIndex < allOptions.length) {
 				handleSelect(allOptions[highlightIndex]);
-			} else {
-				isOpen = true;
-				highlightIndex = allOptions.indexOf(value);
 			}
-		} else if (e.key === 'Escape' || e.key === 'Tab') {
 			isOpen = false;
 			highlightIndex = -1;
+		} else if (e.key === 'Escape') {
+			if (isOpen) {
+				e.preventDefault();
+				e.stopPropagation();
+				isOpen = false;
+				highlightIndex = -1;
+			}
 		}
 	}
 </script>

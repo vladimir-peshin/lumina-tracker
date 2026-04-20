@@ -70,19 +70,36 @@
 			if (!isOpen) return;
 			highlightIndex = highlightIndex > 0 ? highlightIndex - 1 : filteredOptions.length - 1;
 		} else if (e.key === 'Enter') {
-			e.preventDefault();
 			if (isOpen && highlightIndex >= 0 && filteredOptions[highlightIndex]) {
+				e.preventDefault();
+				e.stopPropagation();
 				handleSelect(filteredOptions[highlightIndex]);
 			} else if (inputText.trim()) {
+				e.preventDefault();
+				e.stopPropagation();
 				const newValues = [...selectedValues, inputText.trim()].sort((a, b) => a.localeCompare(b));
 				value = newValues.join(', ');
 				inputText = '';
 				isOpen = false;
 				highlightIndex = -1;
 			}
-		} else if (e.key === 'Escape' || e.key === 'Tab') {
+		} else if (e.key === 'Tab') {
+			if (isOpen && highlightIndex >= 0 && filteredOptions[highlightIndex]) {
+				handleSelect(filteredOptions[highlightIndex]);
+			} else if (inputText.trim()) {
+				const newValues = [...selectedValues, inputText.trim()].sort((a, b) => a.localeCompare(b));
+				value = newValues.join(', ');
+				inputText = '';
+			}
 			isOpen = false;
 			highlightIndex = -1;
+		} else if (e.key === 'Escape') {
+			if (isOpen) {
+				e.preventDefault();
+				e.stopPropagation();
+				isOpen = false;
+				highlightIndex = -1;
+			}
 		} else if (e.key === 'Backspace' && !inputText && selectedValues.length > 0) {
 			const newValues = selectedValues.slice(0, -1);
 			value = newValues.join(', ');
