@@ -43,11 +43,18 @@
 			if (e.key === 'Escape') {
 				onClose();
 			} else if (e.key === 'Enter') {
-				// Don't trigger if focused on elements that have their own Enter behavior
+				const isModKey = e.ctrlKey || e.metaKey;
+				
+				if (isModKey) {
+					handleSave();
+					return;
+				}
+
+				// Don't trigger plain Enter if focused on elements that have their own Enter behavior
 				const tag = e.target.tagName;
 				if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'INPUT') return;
 				
-				onSave(formData);
+				handleSave();
 			}
 		}
 		window.addEventListener('keydown', handleKeyDown);
@@ -156,9 +163,17 @@
 		}
 	}
 
+	function handleSave() {
+		formData.title = (formData.title || '').trim();
+		formData.developer = (formData.developer || '').trim();
+		formData.year = (formData.year || '').toString().trim();
+		formData.comment = (formData.comment || '').trim();
+		onSave(formData);
+	}
+
 	function handleSubmit(e) {
 		e.preventDefault();
-		onSave(formData);
+		handleSave();
 	}
 
 	let isExistingGame = $derived(Boolean(game.id));
