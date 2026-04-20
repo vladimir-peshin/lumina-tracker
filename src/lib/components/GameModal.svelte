@@ -36,6 +36,8 @@
 	let zoom = $state(1);
 	let croppedAreaPixels = $state(null);
 
+	const currentYear = new Date().getFullYear().toString();
+
 	onMount(() => {
 		function handleKeyDown(e) {
 			if (e.key === 'Escape') {
@@ -396,7 +398,13 @@
                                 id="year"
 								name="year"
 								bind:value={formData.year}
+								placeholder={currentYear}
 								autocomplete="off"
+								ondblclick={() => {
+									if (!formData.year) {
+										formData.year = currentYear;
+									}
+								}}
 							/>
 						</div>
 					</div>
