@@ -113,6 +113,13 @@
 			const gameCollsArray = (game.collections || "")
 				.split(",")
 				.map((c) => c.trim().toLowerCase());
+			
+			const isInTrash = gameCollsArray.includes("trash");
+			const isTrashFilterActive = collectionFilter.toLowerCase() === "trash";
+			
+			// If game is in Trash, it's ONLY shown if the Trash filter is active
+			if (isInTrash && !isTrashFilterActive) return false;
+
 			const matchCollection = collectionFilter
 				? gameCollsArray.includes(collectionFilter.toLowerCase())
 				: true;
@@ -149,9 +156,17 @@
 		});
 	});
 
-	let totalBaseCount = $derived(
-		showHidden ? games.length : games.filter((g) => !g.hidden).length,
-	);
+	let totalBaseCount = $derived.by(() => {
+		const isTrashFilterActive = collectionFilter.toLowerCase() === "trash";
+		return games.filter((g) => {
+			const gameColls = (g.collections || "")
+				.split(",")
+				.map((c) => c.trim().toLowerCase());
+			if (gameColls.includes("trash") && !isTrashFilterActive) return false;
+			if (g.hidden && !showHidden) return false;
+			return true;
+		}).length;
+	});
 
 	let isFiltered = $derived(
 		!!(
