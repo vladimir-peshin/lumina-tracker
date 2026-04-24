@@ -25,12 +25,27 @@ export async function GET({ params, fetch }) {
 		try {
 			const infoData = await infoResponse.json();
 			const steamId = infoData?.data?.platforms?.steam?.id;
+			const metadata = infoData?.data?.platforms?.steam?.metadata;
 
 			if (steamId) {
-				const steamThumbUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900.jpg`;
-				const steamFullUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900_2x.jpg`;
+				let steamThumbUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900.jpg`;
+				let steamFullUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/library_600x900_2x.jpg`;
+
+				// Try to use metadata for more accurate URLs (especially for newer games with hashes)
+				const capsule = metadata?.library_capsule_full;
+				if (capsule) {
+					const thumbFile = capsule.image?.english || 'library_600x900.jpg';
+					const fullFile = capsule.image2x?.english || 'library_600x900_2x.jpg';
+					const mtime = metadata?.store_asset_mtime;
+					
+					steamThumbUrl = `https://shared.steamstatic.com/store_item_assets/steam/apps/${steamId}/${thumbFile}`;
+					if (mtime) steamThumbUrl += `?t=${mtime}`;
+					
+					steamFullUrl = `https://shared.steamstatic.com/store_item_assets/steam/apps/${steamId}/${fullFile}`;
+					if (mtime) steamFullUrl += `?t=${mtime}`;
+				}
 				
-				// Verify if at least the thumb exists (usually if thumb exists, 2x also exists)
+				// Verify if the URL exists
 				const headCheck = await fetch(steamThumbUrl, { method: 'HEAD' });
 				if (headCheck.ok) {
 					grids.unshift({

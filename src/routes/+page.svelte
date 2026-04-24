@@ -1,21 +1,35 @@
 <script>
-	import { Search, Plus, Eye, EyeOff, X, Image as ImageIcon } from 'lucide-svelte';
-	import { onMount, tick } from 'svelte';
-	import FilterDropdown from '$lib/components/FilterDropdown.svelte';
-	import GameModal from '$lib/components/GameModal.svelte';
-	import GameCover from '$lib/components/GameCover.svelte';
+	import {
+		Search,
+		Plus,
+		Eye,
+		EyeOff,
+		X,
+		Image as ImageIcon,
+	} from "lucide-svelte";
+	import { onMount, tick } from "svelte";
+	import FilterDropdown from "$lib/components/FilterDropdown.svelte";
+	import GameModal from "$lib/components/GameModal.svelte";
+	import GameCover from "$lib/components/GameCover.svelte";
 
 	let { data } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let games = $state([...(data.games || [])]);
-	let STATUSES = ['None', 'Backlog', 'Playing', 'Played', 'Finished', 'Dropped'];
+	let STATUSES = [
+		"None",
+		"Backlog",
+		"Playing",
+		"Played",
+		"Finished",
+		"Dropped",
+	];
 
-	let search = $state('');
-	let platformFilter = $state('');
-	let tagFilter = $state('');
-	let collectionFilter = $state('');
-	let statusFilter = $state('');
+	let search = $state("");
+	let platformFilter = $state("");
+	let tagFilter = $state("");
+	let collectionFilter = $state("");
+	let statusFilter = $state("");
 	let showHidden = $state(false);
 
 	let selectedGame = $state(null);
@@ -36,18 +50,42 @@
 	});
 
 	let platforms = $derived(
-		[...new Set(games.flatMap((g) => (g.platform || '').split(',').map((p) => p.trim()).filter(Boolean)))]
-			.sort((a, b) => a.localeCompare(b))
+		[
+			...new Set(
+				games.flatMap((g) =>
+					(g.platform || "")
+						.split(",")
+						.map((p) => p.trim())
+						.filter(Boolean),
+				),
+			),
+		].sort((a, b) => a.localeCompare(b)),
 	);
 
 	let tags = $derived(
-		[...new Set(games.flatMap((g) => (g.tags || '').split(',').map((t) => t.trim()).filter(Boolean)))]
-			.sort((a, b) => a.localeCompare(b))
+		[
+			...new Set(
+				games.flatMap((g) =>
+					(g.tags || "")
+						.split(",")
+						.map((t) => t.trim())
+						.filter(Boolean),
+				),
+			),
+		].sort((a, b) => a.localeCompare(b)),
 	);
 
 	let collections = $derived(
-		[...new Set(games.flatMap((g) => (g.collections || '').split(',').map((c) => c.trim()).filter(Boolean)))]
-			.sort((a, b) => a.localeCompare(b))
+		[
+			...new Set(
+				games.flatMap((g) =>
+					(g.collections || "")
+						.split(",")
+						.map((c) => c.trim())
+						.filter(Boolean),
+				),
+			),
+		].sort((a, b) => a.localeCompare(b)),
 	);
 
 	let filteredGames = $derived.by(() => {
@@ -55,33 +93,52 @@
 		const filtered = games.filter((game) => {
 			const matchSearch =
 				!trimmedSearch ||
-				(game.title || '').toLowerCase().includes(trimmedSearch) ||
-				(game.developer || '').toLowerCase().includes(trimmedSearch);
+				(game.title || "").toLowerCase().includes(trimmedSearch) ||
+				(game.developer || "").toLowerCase().includes(trimmedSearch);
 
 			const matchPlatform = platformFilter
-				? (game.platform || '').split(',').map((p) => p.trim().toLowerCase()).includes(platformFilter.toLowerCase())
+				? (game.platform || "")
+						.split(",")
+						.map((p) => p.trim().toLowerCase())
+						.includes(platformFilter.toLowerCase())
 				: true;
 
-			const gameTagsArray = (game.tags || '').split(',').map((t) => t.trim().toLowerCase());
-			const matchTag = tagFilter ? gameTagsArray.includes(tagFilter.toLowerCase()) : true;
+			const gameTagsArray = (game.tags || "")
+				.split(",")
+				.map((t) => t.trim().toLowerCase());
+			const matchTag = tagFilter
+				? gameTagsArray.includes(tagFilter.toLowerCase())
+				: true;
 
-			const gameCollsArray = (game.collections || '').split(',').map((c) => c.trim().toLowerCase());
-			const matchCollection = collectionFilter ? gameCollsArray.includes(collectionFilter.toLowerCase()) : true;
+			const gameCollsArray = (game.collections || "")
+				.split(",")
+				.map((c) => c.trim().toLowerCase());
+			const matchCollection = collectionFilter
+				? gameCollsArray.includes(collectionFilter.toLowerCase())
+				: true;
 
 			const matchStatus = statusFilter
-				? (game.status || '').toLowerCase() === statusFilter.toLowerCase()
+				? (game.status || "").toLowerCase() === statusFilter.toLowerCase()
 				: true;
 
 			const isHidden = !!game.hidden;
-			const shouldShowByVisibility = !isHidden || showHidden || (search && matchSearch);
+			const shouldShowByVisibility =
+				!isHidden || showHidden || (search && matchSearch);
 
-			return matchSearch && matchPlatform && matchTag && matchCollection && matchStatus && shouldShowByVisibility;
+			return (
+				matchSearch &&
+				matchPlatform &&
+				matchTag &&
+				matchCollection &&
+				matchStatus &&
+				shouldShowByVisibility
+			);
 		});
 
 		// Sort
 		return filtered.sort((a, b) => {
-			const titleA = (a.title || '').toLowerCase();
-			const titleB = (b.title || '').toLowerCase();
+			const titleA = (a.title || "").toLowerCase();
+			const titleB = (b.title || "").toLowerCase();
 			if (trimmedSearch) {
 				const aStarts = titleA.startsWith(trimmedSearch);
 				const bStarts = titleB.startsWith(trimmedSearch);
@@ -93,11 +150,17 @@
 	});
 
 	let totalBaseCount = $derived(
-		showHidden ? games.length : games.filter((g) => !g.hidden).length
+		showHidden ? games.length : games.filter((g) => !g.hidden).length,
 	);
 
 	let isFiltered = $derived(
-		!!(search || platformFilter || tagFilter || collectionFilter || statusFilter)
+		!!(
+			search ||
+			platformFilter ||
+			tagFilter ||
+			collectionFilter ||
+			statusFilter
+		),
 	);
 
 	let counterDisplay = $derived.by(() => {
@@ -108,8 +171,10 @@
 	});
 
 	$effect(() => {
-		document.body.style.overflow = isModalOpen ? 'hidden' : '';
-		return () => { document.body.style.overflow = ''; };
+		document.body.style.overflow = isModalOpen ? "hidden" : "";
+		return () => {
+			document.body.style.overflow = "";
+		};
 	});
 
 	$effect(() => {
@@ -121,7 +186,7 @@
 						visibleCount += 100;
 					}
 				},
-				{ rootMargin: '400px' }
+				{ rootMargin: "400px" },
 			);
 			observer.observe(sentinelNode);
 		}
@@ -132,16 +197,16 @@
 
 	function handleAddClick() {
 		selectedGame = {
-			title: '',
-			developer: '',
-			year: '',
-			platform: '',
-			tags: '',
-			collections: '',
-			status: 'None',
-			comment: '',
-			cover: '',
-			hidden: false
+			title: "",
+			developer: "",
+			year: "",
+			platform: "",
+			tags: "",
+			collections: "",
+			status: "None",
+			comment: "",
+			cover: "",
+			hidden: false,
 		};
 		isModalOpen = true;
 	}
@@ -156,50 +221,53 @@
 
 		const duplicate = games.find(
 			(g) =>
-				g.title.toLowerCase().trim() === (updatedGame.title || '').toLowerCase().trim() &&
-				g.id !== updatedGame.id
+				g.title.toLowerCase().trim() ===
+					(updatedGame.title || "").toLowerCase().trim() &&
+				g.id !== updatedGame.id,
 		);
 
 		if (duplicate) {
-			alert(`A game with the title "${updatedGame.title}" already exists in your collection.`);
+			alert(
+				`A game with the title "${updatedGame.title}" already exists in your collection.`,
+			);
 			return;
 		}
 
 		try {
 			if (isNew) {
-				const res = await fetch('/api/games', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(updatedGame)
+				const res = await fetch("/api/games", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(updatedGame),
 				});
 				const savedGame = await res.json();
 				games = [savedGame, ...games];
 			} else {
 				const res = await fetch(`/api/games/${updatedGame.id}`, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(updatedGame)
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(updatedGame),
 				});
 				const savedGame = await res.json();
 				games = games.map((g) => (g.id === savedGame.id ? savedGame : g));
 			}
 			isModalOpen = false;
 		} catch (err) {
-			console.error('Error saving game:', err);
-			alert('Failed to save game. Make sure the backend server is running.');
+			console.error("Error saving game:", err);
+			alert("Failed to save game. Make sure the backend server is running.");
 		}
 	}
 
 	async function handleDeleteGame(id) {
 		try {
 			await fetch(`/api/games/${id}`, {
-				method: 'DELETE'
+				method: "DELETE",
 			});
 			games = games.filter((g) => g.id !== id);
 			isModalOpen = false;
 		} catch (err) {
-			console.error('Error deleting game:', err);
-			alert('Failed to delete game.');
+			console.error("Error deleting game:", err);
+			alert("Failed to delete game.");
 		}
 	}
 
@@ -236,7 +304,7 @@
 			<button
 				type="button"
 				class="clear-search-button"
-				onclick={() => (search = '')}
+				onclick={() => (search = "")}
 				title="Clear search"
 				aria-label="Clear search"
 			>
@@ -245,16 +313,28 @@
 		{/if}
 	</div>
 
-	<FilterDropdown bind:value={platformFilter} options={platforms} allLabel="All Platforms" />
+	<FilterDropdown
+		bind:value={platformFilter}
+		options={platforms}
+		allLabel="All Platforms"
+	/>
 	<FilterDropdown bind:value={tagFilter} options={tags} allLabel="All Tags" />
-	<FilterDropdown bind:value={collectionFilter} options={collections} allLabel="All Collections" />
-	<FilterDropdown bind:value={statusFilter} options={STATUSES} allLabel="All Statuses" />
+	<FilterDropdown
+		bind:value={collectionFilter}
+		options={collections}
+		allLabel="All Collections"
+	/>
+	<FilterDropdown
+		bind:value={statusFilter}
+		options={STATUSES}
+		allLabel="All Statuses"
+	/>
 
 	<button
 		class="btn {showHidden ? 'btn-primary' : 'btn-secondary'} btn-icon"
 		onclick={() => (showHidden = !showHidden)}
 		style="flex-shrink: 0;"
-		title={showHidden ? 'Hide hidden games' : 'Show hidden games'}
+		title={showHidden ? "Hide hidden games" : "Show hidden games"}
 	>
 		{#if showHidden}
 			<Eye size={18} />
@@ -271,7 +351,7 @@
 		<div
 			class="game-card {game.hidden ? 'is-hidden' : ''}"
 			onclick={() => handleEditClick(game)}
-			data-tooltip={game.title || 'Untitled'}
+			data-tooltip={game.title || "Untitled"}
 		>
 			<div class="cover-wrapper">
 				<GameCover src={game.cover} alt={game.title} class="cover-image">
@@ -280,7 +360,7 @@
 					{/snippet}
 				</GameCover>
 			</div>
-			<div class="game-title">{game.title || 'Untitled'}</div>
+			<div class="game-title">{game.title || "Untitled"}</div>
 		</div>
 	{/each}
 
